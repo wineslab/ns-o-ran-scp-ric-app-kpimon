@@ -349,9 +349,9 @@ type CellMetricsEntry struct {
 }
 
 type CellRFType struct {
-	RSRP   int `json:"rsrp"`
-	RSRQ   int `json:"rsrq"`
-	RSSINR int `json:"rsSinr"`
+	RSRP int `json:"rsrp"`
+	RSRQ int `json:"rsrq"`
+	RSSINR int `json:"rssinr"`
 }
 
 type NeighborCellRFType struct {
@@ -360,15 +360,15 @@ type NeighborCellRFType struct {
 }
 
 type UeMetricsEntry struct {
-	UeID                   string               `json:"UE ID"`
-	ServingCellID          string               `json:"Serving Cell ID"`
-	MeasTimestampPDCPBytes Timestamp            `json:"Meas-Timestamp-PDCP-Bytes"`
-	PDCPBytesDL            int64                `json:"PDCP-Bytes-DL"`
-	PDCPBytesUL            int64                `json:"PDCP-Bytes-UL"`
-	MeasTimestampPRB       Timestamp            `json:"Meas-Timestamp-PRB"`
-	PRBUsageDL             int64                `json:"PRB-Usage-DL"`
-	PRBUsageUL             int64                `json:"PRB-Usage-UL"`
-	MeasTimeRF             Timestamp            `json:"Meas-Time-RF"`
-	ServingCellRF          CellRFType           `json:"Serving-Cell-RF"`
-	NeighborCellsRF        []NeighborCellRFType `json:"Neighbor-Cell-RF"`
+	UeID                   string    `json:"UE ID"`
+	ServingCellID          string    `json:"Serving Cell ID"`
+	MeasTimestampPDCPBytes Timestamp `json:"Meas-Timestamp-PDCP-Bytes"`
+	PDCPBytesDL            int64     `json:"PDCP-Bytes-DL"`
+	PDCPBytesUL            int64     `json:"PDCP-Bytes-UL"`
+	MeasTimestampPRB       Timestamp `json:"Meas-Timestamp-PRB"`
+	PRBUsageDL             int64     `json:"PRB-Usage-DL"`
+	PRBUsageUL             int64     `json:"PRB-Usage-UL"`
+	MeasTimeRF             Timestamp `json:"Meas-Time-RF"`
+	ServingCellRF   CellRFType           `json:"servingCellRfReport"`
+	NeighborCellsRF []NeighborCellRFType `json:"neighbourCellList"`
 }
