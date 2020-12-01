@@ -649,6 +649,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 							}
 
+							ueMetrics.UeID = ueID
+							log.Printf("UeID: %d", ueMetrics.UeID)
 							ueMetrics.ServingCellID = servingCellID
 							log.Printf("ServingCellID: %s", ueMetrics.ServingCellID)
 
@@ -719,6 +721,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 							}
 
+							ueMetrics.UeID = ueID
+							log.Printf("UeID: %d", ueMetrics.UeID)
 							ueMetrics.ServingCellID = servingCellID
 							log.Printf("ServingCellID: %s", ueMetrics.ServingCellID)
 
@@ -797,6 +801,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 							}
 
+							ueMetrics.UeID = ueID
+							log.Printf("UeID: %d", ueMetrics.UeID)
 							ueMetrics.ServingCellID = servingCellID
 							log.Printf("ServingCellID: %s", ueMetrics.ServingCellID)
 

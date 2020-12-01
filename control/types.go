@@ -360,7 +360,7 @@ type NeighborCellRFType struct {
 }
 
 type UeMetricsEntry struct {
-	UeID                   string    `json:"UE ID"`
+	UeID                   int64     `json:"UE ID"`
 	ServingCellID          string    `json:"Serving Cell ID"`
 	MeasTimestampPDCPBytes Timestamp `json:"Meas-Timestamp-PDCP-Bytes"`
 	PDCPBytesDL            int64     `json:"PDCP-Bytes-DL"`
