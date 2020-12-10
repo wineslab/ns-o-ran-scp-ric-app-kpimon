@@ -644,15 +644,16 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 							}
 
 							var ueMetrics UeMetricsEntry
-							if isUeExist, _ := c.client.Exists(strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
-								ueJsonStr, _ := c.client.Get(strconv.FormatInt(ueID, 10)).Result()
+							if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
+								ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
 								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 							}
 
 							ueMetrics.UeID = ueID
 							log.Printf("UeID: %d", ueMetrics.UeID)
-							ueMetrics.ServingCellID = servingCellID
+							ueMetrics.ServingCellID = servingCellID							
 							log.Printf("ServingCellID: %s", ueMetrics.ServingCellID)
+							ueMetrics.MeasPeriodRF = 20
 
 							if flag {
 								timestampPRB = timestamp
@@ -677,7 +678,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								log.Printf("Failed to marshal UeMetrics with UE ID [%d]: %v", ueID, err)
 								continue
 							}
-							err = c.client.Set(strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+							err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
@@ -716,8 +717,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 							}
 
 							var ueMetrics UeMetricsEntry
-							if isUeExist, _ := c.client.Exists(strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
-								ueJsonStr, _ := c.client.Get(strconv.FormatInt(ueID, 10)).Result()
+							if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
+								ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
 								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 							}
 
@@ -728,6 +729,9 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 
 							ueMetrics.MeasTimeRF.TVsec = timestamp.TVsec
 							ueMetrics.MeasTimeRF.TVnsec = timestamp.TVnsec
+
+							ueMetrics.MeasPeriodPDCP = 20
+							ueMetrics.MeasPeriodPRB = 20
 
 							if ueResourceReportItem.ServingCellRF != nil {
 								err = json.Unmarshal(ueResourceReportItem.ServingCellRF.Buf, &ueMetrics.ServingCellRF)
@@ -757,7 +761,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								log.Printf("Failed to marshal UeMetrics with UE ID [%d]: %v", ueID, err)
 								continue
 							}
-							err = c.client.Set(strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+							err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
@@ -796,8 +800,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 							}
 
 							var ueMetrics UeMetricsEntry
-							if isUeExist, _ := c.client.Exists(strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
-								ueJsonStr, _ := c.client.Get(strconv.FormatInt(ueID, 10)).Result()
+							if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
+								ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
 								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 							}
 
@@ -837,7 +841,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								log.Printf("Failed to marshal UeMetrics with UE ID [%d]: %v", ueID, err)
 								continue
 							}
-							err = c.client.Set(strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+							err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
@@ -854,10 +858,14 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 
 			if flag {
 				var cellMetrics CellMetricsEntry
-				if isCellExist, _ := c.client.Exists(cellIDHdr).Result(); isCellExist == 1 {
-					cellJsonStr, _ := c.client.Get(cellIDHdr).Result()
+				if isCellExist, _ := c.client.Exists("{TS-cell-metrics}," + cellIDHdr).Result(); isCellExist == 1 {
+					cellJsonStr, _ := c.client.Get("{TS-cell-metrics}," + cellIDHdr).Result()
 					json.Unmarshal([]byte(cellJsonStr), &cellMetrics)
 				}
+
+				cellMetrics.MeasPeriodPDCP = 20
+				cellMetrics.MeasPeriodPRB = 20
+				cellMetrics.CellID = cellIDHdr
 
 				if timestampPDCPBytes != nil {
 					cellMetrics.MeasTimestampPDCPBytes.TVsec = timestampPDCPBytes.TVsec
@@ -886,7 +894,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 					log.Printf("Failed to marshal CellMetrics with CellID [%s]: %v", cellIDHdr, err)
 					continue
 				}
-				err = c.client.Set(cellIDHdr, newCellJsonStr, 0).Err()
+				err = c.client.Set("{TS-cell-metrics}," + cellIDHdr, newCellJsonStr, 0).Err()
 				if err != nil {
 					xapp.Logger.Error("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
 					log.Printf("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
