@@ -1,4 +1,4 @@
-FROM nexus3.o-ran-sc.org:10004/o-ran-sc/bldr-ubuntu18-c-go:1.9.0 as kpimonbuild
+FROM nexus3.o-ran-sc.org:10004/o-ran-sc/bldr-ubuntu18-c-go:8-u18.04 as kpimonbuild
 
 ENV PATH $PATH:/usr/local/bin
 ENV GOPATH /go
@@ -16,6 +16,7 @@ RUN rm -f rmr_${RMRVERSION}_amd64.deb rmr-dev_${RMRVERSION}_amd64.deb
 
 ARG XAPPFRAMEVERSION=v0.4.11
 WORKDIR /go/src/gerrit.o-ran-sc.org/r/ric-plt
+RUN git clone "https://gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 RUN git clone -b ${XAPPFRAMEVERSION} "https://gerrit.o-ran-sc.org/r/ric-plt/xapp-frame"
 RUN cd xapp-frame && \
     GO111MODULE=on go mod vendor -v && \
