@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-
+	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
-	"github.com/go-redis/redis"
+	//"github.com/go-redis/redis"
 )
 
 type Control struct {
@@ -19,11 +19,12 @@ type Control struct {
 	eventCreateExpired    int32                //maximum time for the RIC Subscription Request event creation procedure in the E2 Node
 	eventDeleteExpired    int32                //maximum time for the RIC Subscription Request event deletion procedure in the E2 Node
 	rcChan                chan *xapp.RMRParams //channel for receiving rmr message
-	client                *redis.Client        //redis client
+	//client                *redis.Client        //redis client
 	eventCreateExpiredMap map[string]bool      //map for recording the RIC Subscription Request event creation procedure is expired or not
 	eventDeleteExpiredMap map[string]bool      //map for recording the RIC Subscription Request event deletion procedure is expired or not
 	eventCreateExpiredMu  *sync.Mutex          //mutex for eventCreateExpiredMap
 	eventDeleteExpiredMu  *sync.Mutex          //mutex for eventDeleteExpiredMap
+	sdl                   *sdlgo.SdlInstance
 }
 
 func init() {
@@ -43,15 +44,16 @@ func NewControl() Control {
 	return Control{strings.Split(str, ","),
 		5, 5,
 		make(chan *xapp.RMRParams),
-		redis.NewClient(&redis.Options{
-			Addr:     os.Getenv("DBAAS_SERVICE_HOST") + ":" + os.Getenv("DBAAS_SERVICE_PORT"), //"localhost:6379"
-			Password: "",
-			DB:       0,
-		}),
+		//redis.NewClient(&redis.Options{
+		//	Addr:     os.Getenv("DBAAS_SERVICE_HOST") + ":" + os.Getenv("DBAAS_SERVICE_PORT"), //"localhost:6379"
+		//	Password: "",
+		//	DB:       0,
+		//}),
 		make(map[string]bool),
 		make(map[string]bool),
 		&sync.Mutex{},
-		&sync.Mutex{}}
+		&sync.Mutex{},
+		sdlgo.NewSdlInstance("kpimon", sdlgo.NewDatabase())}
 }
 
 func ReadyCB(i interface{}) {
@@ -62,11 +64,11 @@ func ReadyCB(i interface{}) {
 }
 
 func (c *Control) Run() {
-	_, err := c.client.Ping().Result()
-	if err != nil {
-		xapp.Logger.Error("Failed to connect to Redis DB with %v", err)
-		log.Printf("Failed to connect to Redis DB with %v", err)
-	}
+	//_, err := c.client.Ping().Result()
+	//if err != nil {
+	//	xapp.Logger.Error("Failed to connect to Redis DB with %v", err)
+	//	log.Printf("Failed to connect to Redis DB with %v", err)
+	//}
 	if len(c.ranList) > 0 {
 		xapp.SetReadyCB(ReadyCB, c)
 		xapp.Run(c)
@@ -644,10 +646,23 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 							}
 
 							var ueMetrics UeMetricsEntry
-							if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
-								ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
-								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+
+							retStr, err := c.sdl.Get([]string{"{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)})
+							if err != nil {
+								panic(err)
+								xapp.Logger.Error("Failed to get ueMetrics from Redis!")
+								log.Printf("Failed to get ueMetrics from Redis!")
+							} else {
+								if retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)] != nil {
+									ueJsonStr := retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)].(string)
+									json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+								}
 							}
+
+							//if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
+							//	ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
+							//	json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+							//}
 
 							ueMetrics.UeID = ueID
 							log.Printf("UeID: %d", ueMetrics.UeID)
@@ -678,12 +693,20 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								log.Printf("Failed to marshal UeMetrics with UE ID [%d]: %v", ueID, err)
 								continue
 							}
-							err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+
+							err = c.sdl.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr)
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								continue
 							}
+
+							//err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+							//if err != nil {
+							//	xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
+							//	log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
+							//	continue
+							//}
 						}
 					}
 				} else if containerType == 2 {
@@ -717,10 +740,23 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 							}
 
 							var ueMetrics UeMetricsEntry
-							if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
-								ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
-								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+
+							retStr, err := c.sdl.Get([]string{"{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)})
+							if err != nil {
+								panic(err)
+								xapp.Logger.Error("Failed to get ueMetrics from Redis!")
+								log.Printf("Failed to get ueMetrics from Redis!")
+							} else {
+								if retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)] != nil {
+									ueJsonStr := retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)].(string)
+									json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+								}
 							}
+
+							//if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
+							//	ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
+							//	json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+							//}
 
 							ueMetrics.UeID = ueID
 							log.Printf("UeID: %d", ueMetrics.UeID)
@@ -761,12 +797,20 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								log.Printf("Failed to marshal UeMetrics with UE ID [%d]: %v", ueID, err)
 								continue
 							}
-							err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+
+							err = c.sdl.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr)
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								continue
 							}
+
+							//err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+							//if err != nil {
+							//	xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
+							//	log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
+							//	continue
+							//}
 						}
 					}
 				} else if containerType == 3 {
@@ -800,10 +844,23 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 							}
 
 							var ueMetrics UeMetricsEntry
-							if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
-								ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
-								json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+
+							retStr, err := c.sdl.Get([]string{"{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)})
+							if err != nil {
+								panic(err)
+								xapp.Logger.Error("Failed to get ueMetrics from Redis!")
+								log.Printf("Failed to get ueMetrics from Redis!")
+							} else {
+								if retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)] != nil {
+									ueJsonStr := retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)].(string)
+									json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+								}
 							}
+
+							//if isUeExist, _ := c.client.Exists("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result(); isUeExist == 1 {
+							//	ueJsonStr, _ := c.client.Get("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)).Result()
+							//	json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
+							//}
 
 							ueMetrics.UeID = ueID
 							log.Printf("UeID: %d", ueMetrics.UeID)
@@ -841,12 +898,20 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								log.Printf("Failed to marshal UeMetrics with UE ID [%d]: %v", ueID, err)
 								continue
 							}
-							err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+
+							err = c.sdl.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr)
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								continue
 							}
+
+							//err = c.client.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr, 0).Err()
+							//if err != nil {
+							//	xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
+							//	log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
+							//	continue
+							//}
 						}
 					}
 				} else {
@@ -858,10 +923,23 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 
 			if flag {
 				var cellMetrics CellMetricsEntry
-				if isCellExist, _ := c.client.Exists("{TS-cell-metrics}," + cellIDHdr).Result(); isCellExist == 1 {
-					cellJsonStr, _ := c.client.Get("{TS-cell-metrics}," + cellIDHdr).Result()
-					json.Unmarshal([]byte(cellJsonStr), &cellMetrics)
+
+				retStr, err := c.sdl.Get([]string{"{TS-cell-metrics}," + cellIDHdr})
+				if err != nil {
+					panic(err)
+					xapp.Logger.Error("Failed to get cellMetrics from Redis!")
+					log.Printf("Failed to get cellMetrics from Redis!")
+				} else {
+					if retStr["{TS-cell-metrics}," + cellIDHdr] != nil {
+						cellJsonStr := retStr["{TS-cell-metrics}," + cellIDHdr].(string)
+						json.Unmarshal([]byte(cellJsonStr), &cellMetrics)
+					}
 				}
+
+				//if isCellExist, _ := c.client.Exists("{TS-cell-metrics}," + cellIDHdr).Result(); isCellExist == 1 {
+				//	cellJsonStr, _ := c.client.Get("{TS-cell-metrics}," + cellIDHdr).Result()
+				//	json.Unmarshal([]byte(cellJsonStr), &cellMetrics)
+				//}
 
 				cellMetrics.MeasPeriodPDCP = 20
 				cellMetrics.MeasPeriodPRB = 20
@@ -894,12 +972,21 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 					log.Printf("Failed to marshal CellMetrics with CellID [%s]: %v", cellIDHdr, err)
 					continue
 				}
-				err = c.client.Set("{TS-cell-metrics}," + cellIDHdr, newCellJsonStr, 0).Err()
+
+				err = c.sdl.Set("{TS-cell-metrics}," + cellIDHdr, newCellJsonStr)
 				if err != nil {
 					xapp.Logger.Error("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
 					log.Printf("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
 					continue
 				}
+
+
+				//err = c.client.Set("{TS-cell-metrics}," + cellIDHdr, newCellJsonStr, 0).Err()
+				//if err != nil {
+				//	xapp.Logger.Error("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
+				//	log.Printf("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
+				//	continue
+				//}
 			}
 		}
 	} else {
@@ -1212,3 +1299,4 @@ func (c *Control) sendRicSubDelRequest(subID int, requestSN int, funcID int) (er
 
 	return nil
 }
+
