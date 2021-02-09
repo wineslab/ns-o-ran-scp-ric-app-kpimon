@@ -1,10 +1,10 @@
 ---
 distribution_type: container
-container_release_tag: 1.0.0
+container_release_tag: 1.0.1
 container_pull_registry: nexus3.o-ran-sc.org:10004
 container_push_registry: nexus3.o-ran-sc.org:10002
 project: scp/ric-app/kpimon
-ref: b2ca622d8bc6ffa6022a4e9a09535bbf68e3f780
+ref: f291db7f83f61976fb46a65e5496317131d5ae82
 containers:
     - name: scp-ric-app-kpimon
-      version: 1.0.0
+      version: 1.0.1
