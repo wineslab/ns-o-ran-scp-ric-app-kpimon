@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	//"github.com/go-redis/redis"
@@ -94,7 +95,7 @@ func (c *Control) startTimerSubReq() {
 			count++
 			xapp.Logger.Debug("send RIC_SUB_REQ to gNodeB with cnt=%d", count)
 			log.Printf("send RIC_SUB_REQ to gNodeB with cnt=%d", count)
-			err := c.sendRicSubRequest(1001, 200, 0)
+			err := c.sendRicSubRequest(1001, 0, 200)
 			if err != nil && count < MAX_SUBSCRIPTION_ATTEMPTS {
 				t.Reset(5 * time.Second)
 			} else {
@@ -657,8 +658,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								xapp.Logger.Error("Failed to get ueMetrics from Redis!")
 								log.Printf("Failed to get ueMetrics from Redis!")
 							} else {
-								if retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)] != nil {
-									ueJsonStr := retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)].(string)
+								if retStr["{TS-UE-metrics},"+strconv.FormatInt(ueID, 10)] != nil {
+									ueJsonStr := retStr["{TS-UE-metrics},"+strconv.FormatInt(ueID, 10)].(string)
 									json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 								}
 							}
@@ -670,7 +671,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 
 							ueMetrics.UeID = ueID
 							log.Printf("UeID: %d", ueMetrics.UeID)
-							ueMetrics.ServingCellID = servingCellID       
+							ueMetrics.ServingCellID = servingCellID
 							log.Printf("ServingCellID: %s", ueMetrics.ServingCellID)
 							ueMetrics.MeasPeriodRF = 20
 
@@ -698,7 +699,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								continue
 							}
 
-							err = c.sdl.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr)
+							err = c.sdl.Set("{TS-UE-metrics},"+strconv.FormatInt(ueID, 10), newUeJsonStr)
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
@@ -751,8 +752,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								xapp.Logger.Error("Failed to get ueMetrics from Redis!")
 								log.Printf("Failed to get ueMetrics from Redis!")
 							} else {
-								if retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)] != nil {
-									ueJsonStr := retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)].(string)
+								if retStr["{TS-UE-metrics},"+strconv.FormatInt(ueID, 10)] != nil {
+									ueJsonStr := retStr["{TS-UE-metrics},"+strconv.FormatInt(ueID, 10)].(string)
 									json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 								}
 							}
@@ -802,7 +803,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								continue
 							}
 
-							err = c.sdl.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr)
+							err = c.sdl.Set("{TS-UE-metrics},"+strconv.FormatInt(ueID, 10), newUeJsonStr)
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
@@ -855,8 +856,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								xapp.Logger.Error("Failed to get ueMetrics from Redis!")
 								log.Printf("Failed to get ueMetrics from Redis!")
 							} else {
-								if retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)] != nil {
-									ueJsonStr := retStr["{TS-UE-metrics}," + strconv.FormatInt(ueID, 10)].(string)
+								if retStr["{TS-UE-metrics},"+strconv.FormatInt(ueID, 10)] != nil {
+									ueJsonStr := retStr["{TS-UE-metrics},"+strconv.FormatInt(ueID, 10)].(string)
 									json.Unmarshal([]byte(ueJsonStr), &ueMetrics)
 								}
 							}
@@ -903,7 +904,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 								continue
 							}
 
-							err = c.sdl.Set("{TS-UE-metrics}," + strconv.FormatInt(ueID, 10), newUeJsonStr)
+							err = c.sdl.Set("{TS-UE-metrics},"+strconv.FormatInt(ueID, 10), newUeJsonStr)
 							if err != nil {
 								xapp.Logger.Error("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
 								log.Printf("Failed to set UeMetrics into redis with UE ID [%d]: %v", ueID, err)
@@ -934,8 +935,8 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 					xapp.Logger.Error("Failed to get cellMetrics from Redis!")
 					log.Printf("Failed to get cellMetrics from Redis!")
 				} else {
-					if retStr["{TS-cell-metrics}," + cellIDHdr] != nil {
-						cellJsonStr := retStr["{TS-cell-metrics}," + cellIDHdr].(string)
+					if retStr["{TS-cell-metrics},"+cellIDHdr] != nil {
+						cellJsonStr := retStr["{TS-cell-metrics},"+cellIDHdr].(string)
 						json.Unmarshal([]byte(cellJsonStr), &cellMetrics)
 					}
 				}
@@ -977,13 +978,12 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 					continue
 				}
 
-				err = c.sdl.Set("{TS-cell-metrics}," + cellIDHdr, newCellJsonStr)
+				err = c.sdl.Set("{TS-cell-metrics},"+cellIDHdr, newCellJsonStr)
 				if err != nil {
 					xapp.Logger.Error("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
 					log.Printf("Failed to set CellMetrics into redis with CellID [%s]: %v", cellIDHdr, err)
 					continue
 				}
-
 
 				//err = c.client.Set("{TS-cell-metrics}," + cellIDHdr, newCellJsonStr, 0).Err()
 				//if err != nil {
@@ -1247,7 +1247,7 @@ func (c *Control) sendRicSubRequest(subID int, requestSN int, funcID int) (err e
 		log.Printf("Set Payload: %x", params.Payload)
 
 		//params.Meid = &xapp.RMRMeid{RanName: c.ranList[index]}
-		params.Meid = &xapp.RMRMeid{PlmnID: "373437", EnbID: "10110101110001100111011110001", RanName: "gnb_734_733_b5c67788"}
+		params.Meid = &xapp.RMRMeid{PlmnID: "313131", EnbID: "::", RanName: "gnb_131_133_31000000"}
 		xapp.Logger.Debug("The RMR message to be sent is %d with SubId=%d", params.Mtype, params.SubId)
 		log.Printf("The RMR message to be sent is %d with SubId=%d", params.Mtype, params.SubId)
 
@@ -1283,10 +1283,10 @@ func (c *Control) sendRicSubDelRequest(subID int, requestSN int, funcID int) (er
 
 	if funcID == 0 {
 		//params.Meid = &xapp.RMRMeid{PlmnID: "::", EnbID: "::", RanName: "0"}
-		params.Meid = &xapp.RMRMeid{PlmnID: "373437", EnbID: "10110101110001100111011110001", RanName: "gnb_734_733_b5c67788"}
+		params.Meid = &xapp.RMRMeid{PlmnID: "313131", EnbID: "::", RanName: "gnb_131_133_31000000"}
 	} else {
 		//params.Meid = &xapp.RMRMeid{PlmnID: "::", EnbID: "::", RanName: "3"}
-		params.Meid = &xapp.RMRMeid{PlmnID: "373437", EnbID: "10110101110001100111011110001", RanName: "gnb_734_733_b5c67788"}
+		params.Meid = &xapp.RMRMeid{PlmnID: "313131", EnbID: "::", RanName: "gnb_131_133_31000000"}
 	}
 
 	xapp.Logger.Debug("The RMR message to be sent is %d with SubId=%d", params.Mtype, params.SubId)
@@ -1303,4 +1303,3 @@ func (c *Control) sendRicSubDelRequest(subID int, requestSN int, funcID int) (er
 
 	return nil
 }
-

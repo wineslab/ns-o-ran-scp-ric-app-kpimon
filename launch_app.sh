@@ -20,4 +20,6 @@ unset $pod_name
 
 pod_name=$(kubectl get pods -n ricxapp --no-headers -o custom-columns=":metadata.name")
 
-kubectl exec -ti -n ricxapp $pod_name bash
+echo kubectl exec -ti -n ricxapp $pod_name bash
+
+# ./kpimon -f /opt/ric/config/config-file.json
