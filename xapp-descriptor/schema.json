@@ -1,0 +1,62 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "active",
+    "interfaceId"
+  ],
+  "properties": {
+    "active": {
+      "$id": "#/properties/active",
+      "type": "boolean",
+      "title": "The Active Schema",
+      "default": false,
+      "examples": [
+        false
+      ]
+    },
+    "interfaceId": {
+      "$id": "#/properties/interfaceId",
+      "type": "object",
+      "title": "The Interfaceid Schema",
+      "required": [
+        "globalENBId"
+      ],
+      "properties": {
+        "globalENBId": {
+          "$id": "#/properties/interfaceId/properties/globalENBId",
+          "type": "object",
+          "title": "The Globalenbid Schema",
+          "required": [
+            "plmnId",
+            "eNBId"
+          ],
+          "properties": {
+            "plmnId": {
+              "$id": "#/properties/interfaceId/properties/globalENBId/properties/plmnId",
+              "type": "string",
+              "title": "The Plmnid Schema",
+              "default": "",
+              "examples": [
+                "310150"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "eNBId": {
+              "$id": "#/properties/interfaceId/properties/globalENBId/properties/eNBId",
+              "type": "integer",
+              "title": "The Enbid Schema",
+              "default": 0,
+              "examples": [
+                202251
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

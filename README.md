@@ -24,3 +24,5 @@ This xApp can be onboarded through the xApp Onboarder.  The xapp descriptor
 is under the xapp-descriptor/ directory.
 
 Then the xapp can be deployed through the App Manager.
+
+rte|12010|service-ricplt-e2term-rmr-alpha.ricplt:38000

@@ -15,15 +15,15 @@ import (
 )
 
 type Control struct {
-	ranList               []string             //nodeB list
-	eventCreateExpired    int32                //maximum time for the RIC Subscription Request event creation procedure in the E2 Node
-	eventDeleteExpired    int32                //maximum time for the RIC Subscription Request event deletion procedure in the E2 Node
-	rcChan                chan *xapp.RMRParams //channel for receiving rmr message
+	ranList            []string             //nodeB list
+	eventCreateExpired int32                //maximum time for the RIC Subscription Request event creation procedure in the E2 Node
+	eventDeleteExpired int32                //maximum time for the RIC Subscription Request event deletion procedure in the E2 Node
+	rcChan             chan *xapp.RMRParams //channel for receiving rmr message
 	//client                *redis.Client        //redis client
-	eventCreateExpiredMap map[string]bool      //map for recording the RIC Subscription Request event creation procedure is expired or not
-	eventDeleteExpiredMap map[string]bool      //map for recording the RIC Subscription Request event deletion procedure is expired or not
-	eventCreateExpiredMu  *sync.Mutex          //mutex for eventCreateExpiredMap
-	eventDeleteExpiredMu  *sync.Mutex          //mutex for eventDeleteExpiredMap
+	eventCreateExpiredMap map[string]bool //map for recording the RIC Subscription Request event creation procedure is expired or not
+	eventDeleteExpiredMap map[string]bool //map for recording the RIC Subscription Request event deletion procedure is expired or not
+	eventCreateExpiredMu  *sync.Mutex     //mutex for eventCreateExpiredMap
+	eventDeleteExpiredMu  *sync.Mutex     //mutex for eventDeleteExpiredMap
 	sdl                   *sdlgo.SdlInstance
 }
 
@@ -40,7 +40,11 @@ func init() {
 }
 
 func NewControl() Control {
-	str := os.Getenv("ranList")
+	println("Starting new control.")
+	// str := os.Getenv("ranList")
+	str := "gnb_131_133_31000000,gnb_131_133_32000000,gnb_131_133_33000000,gnb_131_133_34000000,gnb_131_133_35000000"
+	println("Ran list is " + str + " ---- ")
+
 	return Control{strings.Split(str, ","),
 		5, 5,
 		make(chan *xapp.RMRParams),
@@ -90,7 +94,7 @@ func (c *Control) startTimerSubReq() {
 			count++
 			xapp.Logger.Debug("send RIC_SUB_REQ to gNodeB with cnt=%d", count)
 			log.Printf("send RIC_SUB_REQ to gNodeB with cnt=%d", count)
-			err := c.sendRicSubRequest(1001, 1001, 0)
+			err := c.sendRicSubRequest(1001, 200, 0)
 			if err != nil && count < MAX_SUBSCRIPTION_ATTEMPTS {
 				t.Reset(5 * time.Second)
 			} else {
@@ -666,7 +670,7 @@ func (c *Control) handleIndication(params *xapp.RMRParams) (err error) {
 
 							ueMetrics.UeID = ueID
 							log.Printf("UeID: %d", ueMetrics.UeID)
-							ueMetrics.ServingCellID = servingCellID							
+							ueMetrics.ServingCellID = servingCellID       
 							log.Printf("ServingCellID: %s", ueMetrics.ServingCellID)
 							ueMetrics.MeasPeriodRF = 20
 
@@ -1121,8 +1125,8 @@ func (c *Control) setEventCreateExpiredTimer(ranName string) {
 				delete(c.eventCreateExpiredMap, ranName)
 				c.eventCreateExpiredMu.Unlock()
 				if !isResponsed {
-					xapp.Logger.Debug("RIC_SUB_REQ[%s]: RIC Event Create Timer experied!", ranName)
-					log.Printf("RIC_SUB_REQ[%s]: RIC Event Create Timer experied!", ranName)
+					xapp.Logger.Debug("RIC_SUB_REQ[%s]: RIC Event Create Timer expired!", ranName)
+					log.Printf("RIC_SUB_REQ[%s]: RIC Event Create Timer expired!", ranName)
 					// c.sendRicSubDelRequest(subID, requestSN, funcID)
 					return
 				}
@@ -1162,8 +1166,8 @@ func (c *Control) setEventDeleteExpiredTimer(ranName string) {
 				delete(c.eventDeleteExpiredMap, ranName)
 				c.eventDeleteExpiredMu.Unlock()
 				if !isResponsed {
-					xapp.Logger.Debug("RIC_SUB_DEL_REQ[%s]: RIC Event Delete Timer experied!", ranName)
-					log.Printf("RIC_SUB_DEL_REQ[%s]: RIC Event Delete Timer experied!", ranName)
+					xapp.Logger.Debug("RIC_SUB_DEL_REQ[%s]: RIC Event Delete Timer expired!", ranName)
+					log.Printf("RIC_SUB_DEL_REQ[%s]: RIC Event Delete Timer expired!", ranName)
 					return
 				}
 			default:
