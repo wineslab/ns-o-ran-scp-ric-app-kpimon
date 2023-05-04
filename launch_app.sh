@@ -22,4 +22,5 @@ pod_name=$(kubectl get pods -n ricxapp --no-headers -o custom-columns=":metadata
 
 echo kubectl exec -ti -n ricxapp $pod_name bash
 
+# To run the kpimon
 # ./kpimon -f /opt/ric/config/config-file.json
