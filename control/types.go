@@ -134,18 +134,19 @@ type GNB_CU_CP_Name PrintableString
 type GNB_CU_UP_Name PrintableString
 
 type IndicationHeaderFormat1 struct {
+	CollectionStartTime *OctetString
 	GlobalKPMnodeIDType int32
 	GlobalKPMnodeID     interface{}
-	NRCGI               *NRCGIType
-	PlmnID              *OctetString
-	SliceID             *SliceIDType
-	FiveQI              int64
-	Qci                 int64
-	UeMessageType       int32
-	GnbDUID             *Integer
-	GnbNameType         int32
-	GnbName             interface{}
-	GlobalgNBID         *GlobalgNBIDType
+	// NRCGI               *NRCGIType
+	// PlmnID              *OctetString
+	// SliceID             *SliceIDType
+	// FiveQI              int64
+	// Qci                 int64
+	// UeMessageType       int32
+	// GnbDUID             *Integer
+	// GnbNameType         int32
+	// GnbName             interface{}
+	GlobalgNBID *GlobalgNBIDType
 }
 
 type IndicationHeader struct {
@@ -202,7 +203,7 @@ type CUCPResourceStatusType struct {
 }
 
 type OCUCPPFContainerType struct {
-	GNBCUCPName        *PrintableString
+	// GNBCUCPName        *PrintableString
 	CUCPResourceStatus CUCPResourceStatusType
 }
 
@@ -251,7 +252,7 @@ type CUUPPFContainerItemType struct {
 }
 
 type OCUUPPFContainerType struct {
-	GNBCUUPName              *PrintableString
+	// GNBCUUPName              *PrintableString
 	CUUPPFContainerItems     [3]CUUPPFContainerItemType
 	CUUPPFContainerItemCount int
 }
@@ -312,11 +313,13 @@ type PFContainerType struct {
 	Container     interface{}
 }
 
-type RANContainerType struct {
-	Timestamp     OctetString
-	ContainerType int32
-	Container     interface{}
-}
+// type RANContainerType struct {
+// 	Timestamp     OctetString
+// 	ContainerType int32
+// 	Container     interface{}
+// }
+
+type RANContainerType OctetString
 
 type PMContainerType struct {
 	PFContainer  *PFContainerType
@@ -329,7 +332,7 @@ type IndicationMessageFormat1 struct {
 }
 
 type IndicationMessage struct {
-	StyleType  int64
+	// StyleType  int64
 	IndMsgType int32
 	IndMsg     interface{}
 }
@@ -341,19 +344,19 @@ type Timestamp struct {
 
 type CellMetricsEntry struct {
 	MeasTimestampPDCPBytes Timestamp `json:"MeasTimestampPDCPBytes"`
-	CellID 		       string 	 `json:"CellID"`
+	CellID                 string    `json:"CellID"`
 	PDCPBytesDL            int64     `json:"PDCPBytesDL"`
 	PDCPBytesUL            int64     `json:"PDCPBytesUL"`
 	MeasTimestampPRB       Timestamp `json:"MeasTimestampAvailPRB"`
 	AvailPRBDL             int64     `json:"AvailPRBDL"`
 	AvailPRBUL             int64     `json:"AvailPRBUL"`
-	MeasPeriodPDCP	       int64	 `json:"MeasPeriodPDCPBytes"`
-	MeasPeriodPRB	       int64	 `json:"MeasPeriodAvailPRB"`
+	MeasPeriodPDCP         int64     `json:"MeasPeriodPDCPBytes"`
+	MeasPeriodPRB          int64     `json:"MeasPeriodAvailPRB"`
 }
 
 type CellRFType struct {
-	RSRP int `json:"rsrp"`
-	RSRQ int `json:"rsrq"`
+	RSRP   int `json:"rsrp"`
+	RSRQ   int `json:"rsrq"`
 	RSSINR int `json:"rssinr"`
 }
 
@@ -363,18 +366,18 @@ type NeighborCellRFType struct {
 }
 
 type UeMetricsEntry struct {
-	UeID                   int64     `json:"UEID"`
-	ServingCellID          string    `json:"ServingCellID"`
-	MeasTimestampPDCPBytes Timestamp `json:"MeasTimestampUEPDCPBytes"`
-	PDCPBytesDL            int64     `json:"UEPDCPBytesDL"`
-	PDCPBytesUL            int64     `json:"UEPDCPBytesUL"`
-	MeasTimestampPRB       Timestamp `json:"MeasTimestampUEPRBUsage"`
-	PRBUsageDL             int64     `json:"UEPRBUsageDL"`
-	PRBUsageUL             int64     `json:"UEPRBUsageUL"`
-	MeasTimeRF             Timestamp `json:"MeasTimestampRF"`
-	MeasPeriodRF	       int64	 `json:"MeasPeriodRF"`
-	MeasPeriodPDCP	       int64	 `json:"MeasPeriodUEPDCPBytes"`
-	MeasPeriodPRB	       int64	 `json:"MeasPeriodUEPRBUsage"`
-	ServingCellRF   CellRFType           `json:"ServingCellRF"`
-	NeighborCellsRF []NeighborCellRFType `json:"NeighborCellRF"`
+	UeID                   int64                `json:"UEID"`
+	ServingCellID          string               `json:"ServingCellID"`
+	MeasTimestampPDCPBytes Timestamp            `json:"MeasTimestampUEPDCPBytes"`
+	PDCPBytesDL            int64                `json:"UEPDCPBytesDL"`
+	PDCPBytesUL            int64                `json:"UEPDCPBytesUL"`
+	MeasTimestampPRB       Timestamp            `json:"MeasTimestampUEPRBUsage"`
+	PRBUsageDL             int64                `json:"UEPRBUsageDL"`
+	PRBUsageUL             int64                `json:"UEPRBUsageUL"`
+	MeasTimeRF             Timestamp            `json:"MeasTimestampRF"`
+	MeasPeriodRF           int64                `json:"MeasPeriodRF"`
+	MeasPeriodPDCP         int64                `json:"MeasPeriodUEPDCPBytes"`
+	MeasPeriodPRB          int64                `json:"MeasPeriodUEPRBUsage"`
+	ServingCellRF          CellRFType           `json:"ServingCellRF"`
+	NeighborCellsRF        []NeighborCellRFType `json:"NeighborCellRF"`
 }

@@ -20,9 +20,9 @@
 package control
 
 /*
-#include <e2sm/wrapper.h>
-#cgo LDFLAGS: -le2smwrapper
-#cgo CFLAGS: -I/usr/local/include/e2sm
+#include <libe2proto/wrapper.h>
+#cgo LDFLAGS: -le2proto -lm
+#cgo CFLAGS: -I/usr/local/include/libe2proto
 */
 import "C"
 
@@ -72,8 +72,9 @@ func (c *E2sm) GetIndicationHeader(buffer []byte) (indHdr *IndicationHeader, err
 		indHdrFormat1 := &IndicationHeaderFormat1{}
 		indHdrFormat1_C := *(**C.E2SM_KPM_IndicationHeader_Format1_t)(unsafe.Pointer(&decodedHdr.choice[0]))
 
-		if indHdrFormat1_C.id_GlobalKPMnode_ID != nil {
-			globalKPMnodeID_C := (*C.GlobalKPMnode_ID_t)(indHdrFormat1_C.id_GlobalKPMnode_ID)
+		// Decode and analysis of GlobalE2node_ID
+		if uintptr(unsafe.Pointer(&indHdrFormat1_C.id_GlobalE2node_ID)) != uintptr(0) {
+			globalKPMnodeID_C := (C.GlobalE2node_ID_t)(indHdrFormat1_C.id_GlobalE2node_ID)
 
 			indHdrFormat1.GlobalKPMnodeIDType = int32(globalKPMnodeID_C.present)
 			if indHdrFormat1.GlobalKPMnodeIDType == 1 {
@@ -226,118 +227,126 @@ func (c *E2sm) GetIndicationHeader(buffer []byte) (indHdr *IndicationHeader, err
 			indHdrFormat1.GlobalKPMnodeIDType = 0
 		}
 
-		if indHdrFormat1_C.nRCGI != nil {
-			indHdrFormat1.NRCGI = &NRCGIType{}
+		// Decode and analysis of CollectionStartTime
+		if uintptr(unsafe.Pointer(&indHdrFormat1_C.collectionStartTime)) != uintptr(0) {
+			indHdrFormat1.CollectionStartTime = &OctetString{}
 
-			plmnID := indHdrFormat1_C.nRCGI.pLMN_Identity
-			indHdrFormat1.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(plmnID.buf), C.int(plmnID.size))
-			indHdrFormat1.NRCGI.PlmnID.Size = int(plmnID.size)
-
-			nRCellID := indHdrFormat1_C.nRCGI.nRCellIdentity
-			indHdrFormat1.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(nRCellID.buf), C.int(nRCellID.size))
-			indHdrFormat1.NRCGI.NRCellID.Size = int(nRCellID.size)
-			indHdrFormat1.NRCGI.NRCellID.BitsUnused = int(nRCellID.bits_unused)
+			indHdrFormat1.CollectionStartTime.Buf = C.GoBytes(unsafe.Pointer(indHdrFormat1_C.collectionStartTime.buf), C.int(indHdrFormat1_C.collectionStartTime.size))
+			indHdrFormat1.CollectionStartTime.Size = int(indHdrFormat1_C.collectionStartTime.size)
 		}
 
-		if indHdrFormat1_C.pLMN_Identity != nil {
-			indHdrFormat1.PlmnID = &OctetString{}
+		// if indHdrFormat1_C.nRCGI != nil {
+		// 	indHdrFormat1.NRCGI = &NRCGIType{}
 
-			indHdrFormat1.PlmnID.Buf = C.GoBytes(unsafe.Pointer(indHdrFormat1_C.pLMN_Identity.buf), C.int(indHdrFormat1_C.pLMN_Identity.size))
-			indHdrFormat1.PlmnID.Size = int(indHdrFormat1_C.pLMN_Identity.size)
-		}
+		// 	plmnID := indHdrFormat1_C.nRCGI.pLMN_Identity
+		// 	indHdrFormat1.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(plmnID.buf), C.int(plmnID.size))
+		// 	indHdrFormat1.NRCGI.PlmnID.Size = int(plmnID.size)
 
-		if indHdrFormat1_C.sliceID != nil {
-			indHdrFormat1.SliceID = &SliceIDType{}
+		// 	nRCellID := indHdrFormat1_C.nRCGI.nRCellIdentity
+		// 	indHdrFormat1.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(nRCellID.buf), C.int(nRCellID.size))
+		// 	indHdrFormat1.NRCGI.NRCellID.Size = int(nRCellID.size)
+		// 	indHdrFormat1.NRCGI.NRCellID.BitsUnused = int(nRCellID.bits_unused)
+		// }
 
-			sST := indHdrFormat1_C.sliceID.sST
-			indHdrFormat1.SliceID.SST.Buf = C.GoBytes(unsafe.Pointer(sST.buf), C.int(sST.size))
-			indHdrFormat1.SliceID.SST.Size = int(sST.size)
+		// if indHdrFormat1_C.pLMN_Identity != nil {
+		// 	indHdrFormat1.PlmnID = &OctetString{}
 
-			if indHdrFormat1_C.sliceID.sD != nil {
-				indHdrFormat1.SliceID.SD = &OctetString{}
+		// 	indHdrFormat1.PlmnID.Buf = C.GoBytes(unsafe.Pointer(indHdrFormat1_C.pLMN_Identity.buf), C.int(indHdrFormat1_C.pLMN_Identity.size))
+		// 	indHdrFormat1.PlmnID.Size = int(indHdrFormat1_C.pLMN_Identity.size)
+		// }
 
-				sD := indHdrFormat1_C.sliceID.sD
-				indHdrFormat1.SliceID.SD.Buf = C.GoBytes(unsafe.Pointer(sD.buf), C.int(sD.size))
-				indHdrFormat1.SliceID.SD.Size = int(sD.size)
-			}
-		}
+		// if indHdrFormat1_C.sliceID != nil {
+		// 	indHdrFormat1.SliceID = &SliceIDType{}
 
-		if indHdrFormat1_C.fiveQI != nil {
-			indHdrFormat1.FiveQI = int64(*indHdrFormat1_C.fiveQI)
-		} else {
-			indHdrFormat1.FiveQI = -1
-		}
+		// 	sST := indHdrFormat1_C.sliceID.sST
+		// 	indHdrFormat1.SliceID.SST.Buf = C.GoBytes(unsafe.Pointer(sST.buf), C.int(sST.size))
+		// 	indHdrFormat1.SliceID.SST.Size = int(sST.size)
 
-		if indHdrFormat1_C.qci != nil {
-			indHdrFormat1.Qci = int64(*indHdrFormat1_C.qci)
-		} else {
-			indHdrFormat1.Qci = -1
-		}
+		// 	if indHdrFormat1_C.sliceID.sD != nil {
+		// 		indHdrFormat1.SliceID.SD = &OctetString{}
 
-		if indHdrFormat1_C.message_Type != nil {
-			indHdrFormat1.UeMessageType = int32(*indHdrFormat1_C.message_Type)
-		} else {
-			indHdrFormat1.UeMessageType = -1
-		}
+		// 		sD := indHdrFormat1_C.sliceID.sD
+		// 		indHdrFormat1.SliceID.SD.Buf = C.GoBytes(unsafe.Pointer(sD.buf), C.int(sD.size))
+		// 		indHdrFormat1.SliceID.SD.Size = int(sD.size)
+		// 	}
+		// }
 
-		if indHdrFormat1_C.gNB_DU_ID != nil {
-			indHdrFormat1.GnbDUID = &Integer{}
+		// if indHdrFormat1_C.fiveQI != nil {
+		// 	indHdrFormat1.FiveQI = int64(*indHdrFormat1_C.fiveQI)
+		// } else {
+		// 	indHdrFormat1.FiveQI = -1
+		// }
 
-			indHdrFormat1.GnbDUID.Buf = C.GoBytes(unsafe.Pointer(indHdrFormat1_C.gNB_DU_ID.buf), C.int(indHdrFormat1_C.gNB_DU_ID.size))
-			indHdrFormat1.GnbDUID.Size = int(indHdrFormat1_C.gNB_DU_ID.size)
-		}
+		// if indHdrFormat1_C.qci != nil {
+		// 	indHdrFormat1.Qci = int64(*indHdrFormat1_C.qci)
+		// } else {
+		// 	indHdrFormat1.Qci = -1
+		// }
 
-		if indHdrFormat1_C.gNB_Name != nil {
-			indHdrFormat1.GnbNameType = int32(indHdrFormat1_C.gNB_Name.present)
-			if indHdrFormat1.GnbNameType == 1 {
-				gNBName := &GNB_DU_Name{}
-				gNBName_C := (*C.GNB_DU_Name_t)(unsafe.Pointer(&indHdrFormat1_C.gNB_Name.choice[0]))
+		// if indHdrFormat1_C.message_Type != nil {
+		// 	indHdrFormat1.UeMessageType = int32(*indHdrFormat1_C.message_Type)
+		// } else {
+		// 	indHdrFormat1.UeMessageType = -1
+		// }
 
-				gNBName.Buf = C.GoBytes(unsafe.Pointer(gNBName_C.buf), C.int(gNBName_C.size))
-				gNBName.Size = int(gNBName_C.size)
+		// if indHdrFormat1_C.gNB_DU_ID != nil {
+		// 	indHdrFormat1.GnbDUID = &Integer{}
 
-				indHdrFormat1.GnbName = gNBName
-			} else if indHdrFormat1.GnbNameType == 2 {
-				gNBName := &GNB_CU_CP_Name{}
-				gNBName_C := (*C.GNB_CU_CP_Name_t)(unsafe.Pointer(&indHdrFormat1_C.gNB_Name.choice[0]))
+		// 	indHdrFormat1.GnbDUID.Buf = C.GoBytes(unsafe.Pointer(indHdrFormat1_C.gNB_DU_ID.buf), C.int(indHdrFormat1_C.gNB_DU_ID.size))
+		// 	indHdrFormat1.GnbDUID.Size = int(indHdrFormat1_C.gNB_DU_ID.size)
+		// }
 
-				gNBName.Buf = C.GoBytes(unsafe.Pointer(gNBName_C.buf), C.int(gNBName_C.size))
-				gNBName.Size = int(gNBName_C.size)
+		// if indHdrFormat1_C.gNB_Name != nil {
+		// 	indHdrFormat1.GnbNameType = int32(indHdrFormat1_C.gNB_Name.present)
+		// 	if indHdrFormat1.GnbNameType == 1 {
+		// 		gNBName := &GNB_DU_Name{}
+		// 		gNBName_C := (*C.GNB_DU_Name_t)(unsafe.Pointer(&indHdrFormat1_C.gNB_Name.choice[0]))
 
-				indHdrFormat1.GnbName = gNBName
-			} else if indHdrFormat1.GnbNameType == 3 {
-				gNBName := &GNB_CU_UP_Name{}
-				gNBName_C := (*C.GNB_CU_UP_Name_t)(unsafe.Pointer(&indHdrFormat1_C.gNB_Name.choice[0]))
+		// 		gNBName.Buf = C.GoBytes(unsafe.Pointer(gNBName_C.buf), C.int(gNBName_C.size))
+		// 		gNBName.Size = int(gNBName_C.size)
 
-				gNBName.Buf = C.GoBytes(unsafe.Pointer(gNBName_C.buf), C.int(gNBName_C.size))
-				gNBName.Size = int(gNBName_C.size)
+		// 		indHdrFormat1.GnbName = gNBName
+		// 	} else if indHdrFormat1.GnbNameType == 2 {
+		// 		gNBName := &GNB_CU_CP_Name{}
+		// 		gNBName_C := (*C.GNB_CU_CP_Name_t)(unsafe.Pointer(&indHdrFormat1_C.gNB_Name.choice[0]))
 
-				indHdrFormat1.GnbName = gNBName
-			}
-		} else {
-			indHdrFormat1.GnbNameType = -1
-		}
+		// 		gNBName.Buf = C.GoBytes(unsafe.Pointer(gNBName_C.buf), C.int(gNBName_C.size))
+		// 		gNBName.Size = int(gNBName_C.size)
 
-		if indHdrFormat1_C.global_GNB_ID != nil {
-			indHdrFormat1.GlobalgNBID = &GlobalgNBIDType{}
+		// 		indHdrFormat1.GnbName = gNBName
+		// 	} else if indHdrFormat1.GnbNameType == 3 {
+		// 		gNBName := &GNB_CU_UP_Name{}
+		// 		gNBName_C := (*C.GNB_CU_UP_Name_t)(unsafe.Pointer(&indHdrFormat1_C.gNB_Name.choice[0]))
 
-			plmnID_C := indHdrFormat1_C.global_GNB_ID.plmn_id
-			indHdrFormat1.GlobalgNBID.PlmnID.Buf = C.GoBytes(unsafe.Pointer(plmnID_C.buf), C.int(plmnID_C.size))
-			indHdrFormat1.GlobalgNBID.PlmnID.Size = int(plmnID_C.size)
+		// 		gNBName.Buf = C.GoBytes(unsafe.Pointer(gNBName_C.buf), C.int(gNBName_C.size))
+		// 		gNBName.Size = int(gNBName_C.size)
 
-			globalgNBID_gNBID_C := indHdrFormat1_C.global_GNB_ID.gnb_id
-			indHdrFormat1.GlobalgNBID.GnbIDType = int(globalgNBID_gNBID_C.present)
-			if indHdrFormat1.GlobalgNBID.GnbIDType == 1 {
-				gNBID := &GNBID{}
-				gNBID_C := (*C.BIT_STRING_t)(unsafe.Pointer(&globalgNBID_gNBID_C.choice[0]))
+		// 		indHdrFormat1.GnbName = gNBName
+		// 	}
+		// } else {
+		// 	indHdrFormat1.GnbNameType = -1
+		// }
 
-				gNBID.Buf = C.GoBytes(unsafe.Pointer(gNBID_C.buf), C.int(gNBID_C.size))
-				gNBID.Size = int(gNBID_C.size)
-				gNBID.BitsUnused = int(gNBID_C.bits_unused)
+		// if indHdrFormat1_C.global_GNB_ID != nil {
+		// 	indHdrFormat1.GlobalgNBID = &GlobalgNBIDType{}
 
-				indHdrFormat1.GlobalgNBID.GnbID = gNBID
-			}
-		}
+		// 	plmnID_C := indHdrFormat1_C.global_GNB_ID.plmn_id
+		// 	indHdrFormat1.GlobalgNBID.PlmnID.Buf = C.GoBytes(unsafe.Pointer(plmnID_C.buf), C.int(plmnID_C.size))
+		// 	indHdrFormat1.GlobalgNBID.PlmnID.Size = int(plmnID_C.size)
+
+		// 	globalgNBID_gNBID_C := indHdrFormat1_C.global_GNB_ID.gnb_id
+		// 	indHdrFormat1.GlobalgNBID.GnbIDType = int(globalgNBID_gNBID_C.present)
+		// 	if indHdrFormat1.GlobalgNBID.GnbIDType == 1 {
+		// 		gNBID := &GNBID{}
+		// 		gNBID_C := (*C.BIT_STRING_t)(unsafe.Pointer(&globalgNBID_gNBID_C.choice[0]))
+
+		// 		gNBID.Buf = C.GoBytes(unsafe.Pointer(gNBID_C.buf), C.int(gNBID_C.size))
+		// 		gNBID.Size = int(gNBID_C.size)
+		// 		gNBID.BitsUnused = int(gNBID_C.bits_unused)
+
+		// 		indHdrFormat1.GlobalgNBID.GnbID = gNBID
+		// 	}
+		// }
 
 		indHdr.IndHdr = indHdrFormat1
 	} else {
@@ -350,19 +359,19 @@ func (c *E2sm) GetIndicationHeader(buffer []byte) (indHdr *IndicationHeader, err
 func (c *E2sm) GetIndicationMessage(buffer []byte) (indMsg *IndicationMessage, err error) {
 	cptr := unsafe.Pointer(&buffer[0])
 	indMsg = &IndicationMessage{}
-	decodedMsg := C.e2sm_decode_ric_indication_message(cptr, C.size_t(len(buffer)))
-	if decodedMsg == nil {
+	decodedIndicationMsg := C.e2sm_decode_ric_indication_message(cptr, C.size_t(len(buffer)))
+	if decodedIndicationMsg == nil {
 		return indMsg, errors.New("e2sm wrapper is unable to get IndicationMessage due to wrong or invalid input")
 	}
-	defer C.e2sm_free_ric_indication_message(decodedMsg)
+	defer C.e2sm_free_ric_indication_message(decodedIndicationMsg)
 
-	indMsg.StyleType = int64(decodedMsg.ric_Style_Type)
+	// indMsg.StyleType = int64(decodedIndicationMsg.ric_Style_Type)
 
-	indMsg.IndMsgType = int32(decodedMsg.indicationMessage.present)
+	indMsg.IndMsgType = int32(decodedIndicationMsg.present)
 
 	if indMsg.IndMsgType == 1 {
 		indMsgFormat1 := &IndicationMessageFormat1{}
-		indMsgFormat1_C := *(**C.E2SM_KPM_IndicationMessage_Format1_t)(unsafe.Pointer(&decodedMsg.indicationMessage.choice[0]))
+		indMsgFormat1_C := *(**C.E2SM_KPM_IndicationMessage_Format1_t)(unsafe.Pointer(&decodedIndicationMsg.choice[0]))
 
 		indMsgFormat1.PMContainerCount = int(indMsgFormat1_C.pm_Containers.list.count)
 		for i := 0; i < indMsgFormat1.PMContainerCount; i++ {
@@ -461,11 +470,11 @@ func (c *E2sm) GetIndicationMessage(buffer []byte) (indMsg *IndicationMessage, e
 								duPMEPC := &DUPMEPCContainerType{}
 								duPMEPC_C := (*C.EPC_DU_PM_Container_t)(servedPlmnPerCell_C.du_PM_EPC)
 
-								duPMEPC.PerQCIReportCount = int(duPMEPC_C.perQCIReportList.list.count)
+								duPMEPC.PerQCIReportCount = int(duPMEPC_C.perQCIReportList_du.list.count)
 								for l := 0; l < duPMEPC.PerQCIReportCount; l++ {
 									perQCIReport := &duPMEPC.PerQCIReports[l]
 									var sizeof_PerQCIReportListItem_t *C.PerQCIReportListItem_t
-									perQCIReport_C := *(**C.PerQCIReportListItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(duPMEPC_C.perQCIReportList.list.array)) + (uintptr)(l)*unsafe.Sizeof(sizeof_PerQCIReportListItem_t)))
+									perQCIReport_C := *(**C.PerQCIReportListItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(duPMEPC_C.perQCIReportList_du.list.array)) + (uintptr)(l)*unsafe.Sizeof(sizeof_PerQCIReportListItem_t)))
 
 									perQCIReport.QCI = int64(perQCIReport_C.qci)
 
@@ -492,11 +501,11 @@ func (c *E2sm) GetIndicationMessage(buffer []byte) (indMsg *IndicationMessage, e
 					oCU_CP_PF := &OCUCPPFContainerType{}
 					oCU_CP_PF_C := *(**C.OCUCP_PF_Container_t)(unsafe.Pointer(&pmContainer_C.performanceContainer.choice[0]))
 
-					if oCU_CP_PF_C.gNB_CU_CP_Name != nil {
-						oCU_CP_PF.GNBCUCPName = &PrintableString{}
-						oCU_CP_PF.GNBCUCPName.Buf = C.GoBytes(unsafe.Pointer(oCU_CP_PF_C.gNB_CU_CP_Name.buf), C.int(oCU_CP_PF_C.gNB_CU_CP_Name.size))
-						oCU_CP_PF.GNBCUCPName.Size = int(oCU_CP_PF_C.gNB_CU_CP_Name.size)
-					}
+					// if oCU_CP_PF_C.gNB_CU_CP_Name != nil {
+					// 	oCU_CP_PF.GNBCUCPName = &PrintableString{}
+					// 	oCU_CP_PF.GNBCUCPName.Buf = C.GoBytes(unsafe.Pointer(oCU_CP_PF_C.gNB_CU_CP_Name.buf), C.int(oCU_CP_PF_C.gNB_CU_CP_Name.size))
+					// 	oCU_CP_PF.GNBCUCPName.Size = int(oCU_CP_PF_C.gNB_CU_CP_Name.size)
+					// }
 
 					if oCU_CP_PF_C.cu_CP_Resource_Status.numberOfActive_UEs != nil {
 						oCU_CP_PF.CUCPResourceStatus.NumberOfActiveUEs = int64(*oCU_CP_PF_C.cu_CP_Resource_Status.numberOfActive_UEs)
@@ -507,11 +516,11 @@ func (c *E2sm) GetIndicationMessage(buffer []byte) (indMsg *IndicationMessage, e
 					oCU_UP_PF := &OCUUPPFContainerType{}
 					oCU_UP_PF_C := *(**C.OCUUP_PF_Container_t)(unsafe.Pointer(&pmContainer_C.performanceContainer.choice[0]))
 
-					if oCU_UP_PF_C.gNB_CU_UP_Name != nil {
-						oCU_UP_PF.GNBCUUPName = &PrintableString{}
-						oCU_UP_PF.GNBCUUPName.Buf = C.GoBytes(unsafe.Pointer(oCU_UP_PF_C.gNB_CU_UP_Name.buf), C.int(oCU_UP_PF_C.gNB_CU_UP_Name.size))
-						oCU_UP_PF.GNBCUUPName.Size = int(oCU_UP_PF_C.gNB_CU_UP_Name.size)
-					}
+					// if oCU_UP_PF_C.gNB_CU_UP_Name != nil {
+					// 	oCU_UP_PF.GNBCUUPName = &PrintableString{}
+					// 	oCU_UP_PF.GNBCUUPName.Buf = C.GoBytes(unsafe.Pointer(oCU_UP_PF_C.gNB_CU_UP_Name.buf), C.int(oCU_UP_PF_C.gNB_CU_UP_Name.size))
+					// 	oCU_UP_PF.GNBCUUPName.Size = int(oCU_UP_PF_C.gNB_CU_UP_Name.size)
+					// }
 
 					oCU_UP_PF.CUUPPFContainerItemCount = int(oCU_UP_PF_C.pf_ContainerList.list.count)
 					for j := 0; j < oCU_UP_PF.CUUPPFContainerItemCount; j++ {
@@ -578,13 +587,13 @@ func (c *E2sm) GetIndicationMessage(buffer []byte) (indMsg *IndicationMessage, e
 								cuUPPMEPC := &CUUPPMEPCType{}
 								cuUPPMEPC_C := (*C.EPC_CUUP_PM_Format_t)(cuUPPlmn_C.cu_UP_PM_EPC)
 
-								cuUPPMEPC.CUUPPMEPCPerQCIReportCount = int(cuUPPMEPC_C.perQCIReportList.list.count)
+								cuUPPMEPC.CUUPPMEPCPerQCIReportCount = int(cuUPPMEPC_C.perQCIReportList_cuup.list.count)
 								for l := 0; l < cuUPPMEPC.CUUPPMEPCPerQCIReportCount; l++ {
 									perQCIReport := &cuUPPMEPC.CUUPPMEPCPerQCIReports[l]
 									var sizeof_PerQCIReportListItemFormat_t *C.PerQCIReportListItemFormat_t
-									perQCIReport_C := *(**C.PerQCIReportListItemFormat_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cuUPPMEPC_C.perQCIReportList.list.array)) + (uintptr)(l)*unsafe.Sizeof(sizeof_PerQCIReportListItemFormat_t)))
+									perQCIReport_C := *(**C.PerQCIReportListItemFormat_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cuUPPMEPC_C.perQCIReportList_cuup.list.array)) + (uintptr)(l)*unsafe.Sizeof(sizeof_PerQCIReportListItemFormat_t)))
 
-									perQCIReport.QCI = int64(perQCIReport_C.qci)
+									perQCIReport.QCI = int64(perQCIReport_C.drbqci)
 
 									if perQCIReport_C.pDCPBytesDL != nil {
 										perQCIReport.PDCPBytesDL = &Integer{}
@@ -615,137 +624,138 @@ func (c *E2sm) GetIndicationMessage(buffer []byte) (indMsg *IndicationMessage, e
 			if pmContainer_C.theRANContainer != nil {
 				ranContainer := &RANContainerType{}
 
-				ranContainer.Timestamp.Buf = C.GoBytes(unsafe.Pointer(pmContainer_C.theRANContainer.timestamp.buf), C.int(pmContainer_C.theRANContainer.timestamp.size))
-				ranContainer.Timestamp.Size = int(pmContainer_C.theRANContainer.timestamp.size)
+				// TODO: parse correctly Octect String
+				// ranContainer.Buf = C.GoBytes(unsafe.Pointer(pmContainer_C.theRANContainer), C.int(pmContainer_C.theRANContainer.size))
+				// ranContainer.Size = int(pmContainer_C.theRANContainer.size)
 
-				ranContainer.ContainerType = int32(pmContainer_C.theRANContainer.reportContainer.present)
+				// ranContainer.ContainerType = int32(pmContainer_C.theRANContainer.reportContainer.present)
 
-				if ranContainer.ContainerType == 1 {
-					oDU_UE := &DUUsageReportType{}
-					oDU_UE_C := *(**C.DU_Usage_Report_Per_UE_t)(unsafe.Pointer(&pmContainer_C.theRANContainer.reportContainer.choice[0]))
+				// if ranContainer.ContainerType == 1 {
+				// 	oDU_UE := &DUUsageReportType{}
+				// 	oDU_UE_C := *(**C.DU_Usage_Report_Per_UE_t)(unsafe.Pointer(&pmContainer_C.theRANContainer.reportContainer.choice[0]))
 
-					oDU_UE.CellResourceReportItemCount = int(oDU_UE_C.cellResourceReportList.list.count)
-					for j := 0; j < oDU_UE.CellResourceReportItemCount; j++ {
-						cellResourceReport := &oDU_UE.CellResourceReportItems[j]
-						var sizeof_DU_Usage_Report_CellResourceReportItem_t *C.DU_Usage_Report_CellResourceReportItem_t
-						cellResourceReport_C := *(**C.DU_Usage_Report_CellResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(oDU_UE_C.cellResourceReportList.list.array)) + (uintptr)(j)*unsafe.Sizeof(sizeof_DU_Usage_Report_CellResourceReportItem_t)))
+				// 	oDU_UE.CellResourceReportItemCount = int(oDU_UE_C.cellResourceReportList.list.count)
+				// 	for j := 0; j < oDU_UE.CellResourceReportItemCount; j++ {
+				// 		cellResourceReport := &oDU_UE.CellResourceReportItems[j]
+				// 		var sizeof_DU_Usage_Report_CellResourceReportItem_t *C.DU_Usage_Report_CellResourceReportItem_t
+				// 		cellResourceReport_C := *(**C.DU_Usage_Report_CellResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(oDU_UE_C.cellResourceReportList.list.array)) + (uintptr)(j)*unsafe.Sizeof(sizeof_DU_Usage_Report_CellResourceReportItem_t)))
 
-						cellResourceReport.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.pLMN_Identity.buf), C.int(cellResourceReport_C.nRCGI.pLMN_Identity.size))
-						cellResourceReport.NRCGI.PlmnID.Size = int(cellResourceReport_C.nRCGI.pLMN_Identity.size)
+				// 		cellResourceReport.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.pLMN_Identity.buf), C.int(cellResourceReport_C.nRCGI.pLMN_Identity.size))
+				// 		cellResourceReport.NRCGI.PlmnID.Size = int(cellResourceReport_C.nRCGI.pLMN_Identity.size)
 
-						cellResourceReport.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.nRCellIdentity.buf), C.int(cellResourceReport_C.nRCGI.nRCellIdentity.size))
-						cellResourceReport.NRCGI.NRCellID.Size = int(cellResourceReport_C.nRCGI.nRCellIdentity.size)
-						cellResourceReport.NRCGI.NRCellID.BitsUnused = int(cellResourceReport_C.nRCGI.nRCellIdentity.bits_unused)
+				// 		cellResourceReport.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.nRCellIdentity.buf), C.int(cellResourceReport_C.nRCGI.nRCellIdentity.size))
+				// 		cellResourceReport.NRCGI.NRCellID.Size = int(cellResourceReport_C.nRCGI.nRCellIdentity.size)
+				// 		cellResourceReport.NRCGI.NRCellID.BitsUnused = int(cellResourceReport_C.nRCGI.nRCellIdentity.bits_unused)
 
-						cellResourceReport.UeResourceReportItemCount = int(cellResourceReport_C.ueResourceReportList.list.count)
-						for k := 0; k < cellResourceReport.UeResourceReportItemCount; k++ {
-							ueResourceReport := &cellResourceReport.UeResourceReportItems[k]
-							var sizeof_DU_Usage_Report_UeResourceReportItem_t *C.DU_Usage_Report_UeResourceReportItem_t
-							ueResourceReport_C := *(**C.DU_Usage_Report_UeResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cellResourceReport_C.ueResourceReportList.list.array)) + (uintptr)(k)*unsafe.Sizeof(sizeof_DU_Usage_Report_UeResourceReportItem_t)))
+				// 		cellResourceReport.UeResourceReportItemCount = int(cellResourceReport_C.ueResourceReportList.list.count)
+				// 		for k := 0; k < cellResourceReport.UeResourceReportItemCount; k++ {
+				// 			ueResourceReport := &cellResourceReport.UeResourceReportItems[k]
+				// 			var sizeof_DU_Usage_Report_UeResourceReportItem_t *C.DU_Usage_Report_UeResourceReportItem_t
+				// 			ueResourceReport_C := *(**C.DU_Usage_Report_UeResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cellResourceReport_C.ueResourceReportList.list.array)) + (uintptr)(k)*unsafe.Sizeof(sizeof_DU_Usage_Report_UeResourceReportItem_t)))
 
-							ueResourceReport.CRNTI.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.c_RNTI.buf), C.int(ueResourceReport_C.c_RNTI.size))
-							ueResourceReport.CRNTI.Size = int(ueResourceReport_C.c_RNTI.size)
+				// 			ueResourceReport.CRNTI.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.c_RNTI.buf), C.int(ueResourceReport_C.c_RNTI.size))
+				// 			ueResourceReport.CRNTI.Size = int(ueResourceReport_C.c_RNTI.size)
 
-							if ueResourceReport_C.dl_PRBUsage != nil {
-								ueResourceReport.PRBUsageDL = int64(*ueResourceReport_C.dl_PRBUsage)
-							} else {
-								ueResourceReport.PRBUsageDL = -1
-							}
+				// 			if ueResourceReport_C.dl_PRBUsage != nil {
+				// 				ueResourceReport.PRBUsageDL = int64(*ueResourceReport_C.dl_PRBUsage)
+				// 			} else {
+				// 				ueResourceReport.PRBUsageDL = -1
+				// 			}
 
-							if ueResourceReport_C.ul_PRBUsage != nil {
-								ueResourceReport.PRBUsageUL = int64(*ueResourceReport_C.ul_PRBUsage)
-							} else {
-								ueResourceReport.PRBUsageUL = -1
-							}
-						}
-					}
+				// 			if ueResourceReport_C.ul_PRBUsage != nil {
+				// 				ueResourceReport.PRBUsageUL = int64(*ueResourceReport_C.ul_PRBUsage)
+				// 			} else {
+				// 				ueResourceReport.PRBUsageUL = -1
+				// 			}
+				// 		}
+				// 	}
 
-					ranContainer.Container = oDU_UE
-				} else if ranContainer.ContainerType == 2 {
-					oCU_CP_UE := &CUCPUsageReportType{}
-					oCU_CP_UE_C := *(**C.CU_CP_Usage_Report_Per_UE_t)(unsafe.Pointer(&pmContainer_C.theRANContainer.reportContainer.choice[0]))
+				// 	ranContainer.Container = oDU_UE
+				// } else if ranContainer.ContainerType == 2 {
+				// 	oCU_CP_UE := &CUCPUsageReportType{}
+				// 	oCU_CP_UE_C := *(**C.CU_CP_Usage_Report_Per_UE_t)(unsafe.Pointer(&pmContainer_C.theRANContainer.reportContainer.choice[0]))
 
-					oCU_CP_UE.CellResourceReportItemCount = int(oCU_CP_UE_C.cellResourceReportList.list.count)
-					for j := 0; j < oCU_CP_UE.CellResourceReportItemCount; j++ {
-						cellResourceReport := &oCU_CP_UE.CellResourceReportItems[j]
-						var sizeof_CU_CP_Usage_Report_CellResourceReportItem_t *C.CU_CP_Usage_Report_CellResourceReportItem_t
-						cellResourceReport_C := *(**C.CU_CP_Usage_Report_CellResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(oCU_CP_UE_C.cellResourceReportList.list.array)) + (uintptr)(j)*unsafe.Sizeof(sizeof_CU_CP_Usage_Report_CellResourceReportItem_t)))
+				// 	oCU_CP_UE.CellResourceReportItemCount = int(oCU_CP_UE_C.cellResourceReportList.list.count)
+				// 	for j := 0; j < oCU_CP_UE.CellResourceReportItemCount; j++ {
+				// 		cellResourceReport := &oCU_CP_UE.CellResourceReportItems[j]
+				// 		var sizeof_CU_CP_Usage_Report_CellResourceReportItem_t *C.CU_CP_Usage_Report_CellResourceReportItem_t
+				// 		cellResourceReport_C := *(**C.CU_CP_Usage_Report_CellResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(oCU_CP_UE_C.cellResourceReportList.list.array)) + (uintptr)(j)*unsafe.Sizeof(sizeof_CU_CP_Usage_Report_CellResourceReportItem_t)))
 
-						cellResourceReport.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.pLMN_Identity.buf), C.int(cellResourceReport_C.nRCGI.pLMN_Identity.size))
-						cellResourceReport.NRCGI.PlmnID.Size = int(cellResourceReport_C.nRCGI.pLMN_Identity.size)
+				// 		cellResourceReport.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.pLMN_Identity.buf), C.int(cellResourceReport_C.nRCGI.pLMN_Identity.size))
+				// 		cellResourceReport.NRCGI.PlmnID.Size = int(cellResourceReport_C.nRCGI.pLMN_Identity.size)
 
-						cellResourceReport.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.nRCellIdentity.buf), C.int(cellResourceReport_C.nRCGI.nRCellIdentity.size))
-						cellResourceReport.NRCGI.NRCellID.Size = int(cellResourceReport_C.nRCGI.nRCellIdentity.size)
-						cellResourceReport.NRCGI.NRCellID.BitsUnused = int(cellResourceReport_C.nRCGI.nRCellIdentity.bits_unused)
+				// 		cellResourceReport.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.nRCellIdentity.buf), C.int(cellResourceReport_C.nRCGI.nRCellIdentity.size))
+				// 		cellResourceReport.NRCGI.NRCellID.Size = int(cellResourceReport_C.nRCGI.nRCellIdentity.size)
+				// 		cellResourceReport.NRCGI.NRCellID.BitsUnused = int(cellResourceReport_C.nRCGI.nRCellIdentity.bits_unused)
 
-						cellResourceReport.UeResourceReportItemCount = int(cellResourceReport_C.ueResourceReportList.list.count)
-						for k := 0; k < cellResourceReport.UeResourceReportItemCount; k++ {
-							ueResourceReport := &cellResourceReport.UeResourceReportItems[k]
-							var sizeof_CU_CP_Usage_Report_UeResourceReportItem_t *C.CU_CP_Usage_Report_UeResourceReportItem_t
-							ueResourceReport_C := *(**C.CU_CP_Usage_Report_UeResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cellResourceReport_C.ueResourceReportList.list.array)) + (uintptr)(k)*unsafe.Sizeof(sizeof_CU_CP_Usage_Report_UeResourceReportItem_t)))
+				// 		cellResourceReport.UeResourceReportItemCount = int(cellResourceReport_C.ueResourceReportList.list.count)
+				// 		for k := 0; k < cellResourceReport.UeResourceReportItemCount; k++ {
+				// 			ueResourceReport := &cellResourceReport.UeResourceReportItems[k]
+				// 			var sizeof_CU_CP_Usage_Report_UeResourceReportItem_t *C.CU_CP_Usage_Report_UeResourceReportItem_t
+				// 			ueResourceReport_C := *(**C.CU_CP_Usage_Report_UeResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cellResourceReport_C.ueResourceReportList.list.array)) + (uintptr)(k)*unsafe.Sizeof(sizeof_CU_CP_Usage_Report_UeResourceReportItem_t)))
 
-							ueResourceReport.CRNTI.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.c_RNTI.buf), C.int(ueResourceReport_C.c_RNTI.size))
-							ueResourceReport.CRNTI.Size = int(ueResourceReport_C.c_RNTI.size)
+				// 			ueResourceReport.CRNTI.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.c_RNTI.buf), C.int(ueResourceReport_C.c_RNTI.size))
+				// 			ueResourceReport.CRNTI.Size = int(ueResourceReport_C.c_RNTI.size)
 
-							if ueResourceReport_C.serving_Cell_RF_Type != nil {
-								ueResourceReport.ServingCellRF = &OctetString{}
-								ueResourceReport.ServingCellRF.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.serving_Cell_RF_Type.buf), C.int(ueResourceReport_C.serving_Cell_RF_Type.size))
-								ueResourceReport.ServingCellRF.Size = int(ueResourceReport_C.serving_Cell_RF_Type.size)
-							}
+				// 			if ueResourceReport_C.serving_Cell_RF_Type != nil {
+				// 				ueResourceReport.ServingCellRF = &OctetString{}
+				// 				ueResourceReport.ServingCellRF.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.serving_Cell_RF_Type.buf), C.int(ueResourceReport_C.serving_Cell_RF_Type.size))
+				// 				ueResourceReport.ServingCellRF.Size = int(ueResourceReport_C.serving_Cell_RF_Type.size)
+				// 			}
 
-							if ueResourceReport_C.neighbor_Cell_RF != nil {
-								ueResourceReport.NeighborCellRF = &OctetString{}
-								ueResourceReport.NeighborCellRF.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.neighbor_Cell_RF.buf), C.int(ueResourceReport_C.neighbor_Cell_RF.size))
-								ueResourceReport.NeighborCellRF.Size = int(ueResourceReport_C.neighbor_Cell_RF.size)
-							}
-						}
-					}
+				// 			if ueResourceReport_C.neighbor_Cell_RF != nil {
+				// 				ueResourceReport.NeighborCellRF = &OctetString{}
+				// 				ueResourceReport.NeighborCellRF.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.neighbor_Cell_RF.buf), C.int(ueResourceReport_C.neighbor_Cell_RF.size))
+				// 				ueResourceReport.NeighborCellRF.Size = int(ueResourceReport_C.neighbor_Cell_RF.size)
+				// 			}
+				// 		}
+				// 	}
 
-					ranContainer.Container = oCU_CP_UE
-				} else if ranContainer.ContainerType == 3 {
-					oCU_UP_UE := &CUUPUsageReportType{}
-					oCU_UP_UE_C := *(**C.CU_UP_Usage_Report_Per_UE_t)(unsafe.Pointer(&pmContainer_C.theRANContainer.reportContainer.choice[0]))
+				// 	ranContainer.Container = oCU_CP_UE
+				// } else if ranContainer.ContainerType == 3 {
+				// 	oCU_UP_UE := &CUUPUsageReportType{}
+				// 	oCU_UP_UE_C := *(**C.CU_UP_Usage_Report_Per_UE_t)(unsafe.Pointer(&pmContainer_C.theRANContainer.reportContainer.choice[0]))
 
-					oCU_UP_UE.CellResourceReportItemCount = int(oCU_UP_UE_C.cellResourceReportList.list.count)
-					for j := 0; j < oCU_UP_UE.CellResourceReportItemCount; j++ {
-						cellResourceReport := &oCU_UP_UE.CellResourceReportItems[j]
-						var sizeof_CU_UP_Usage_Report_CellResourceReportItem_t *C.CU_UP_Usage_Report_CellResourceReportItem_t
-						cellResourceReport_C := *(**C.CU_UP_Usage_Report_CellResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(oCU_UP_UE_C.cellResourceReportList.list.array)) + (uintptr)(j)*unsafe.Sizeof(sizeof_CU_UP_Usage_Report_CellResourceReportItem_t)))
+				// 	oCU_UP_UE.CellResourceReportItemCount = int(oCU_UP_UE_C.cellResourceReportList.list.count)
+				// 	for j := 0; j < oCU_UP_UE.CellResourceReportItemCount; j++ {
+				// 		cellResourceReport := &oCU_UP_UE.CellResourceReportItems[j]
+				// 		var sizeof_CU_UP_Usage_Report_CellResourceReportItem_t *C.CU_UP_Usage_Report_CellResourceReportItem_t
+				// 		cellResourceReport_C := *(**C.CU_UP_Usage_Report_CellResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(oCU_UP_UE_C.cellResourceReportList.list.array)) + (uintptr)(j)*unsafe.Sizeof(sizeof_CU_UP_Usage_Report_CellResourceReportItem_t)))
 
-						cellResourceReport.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.pLMN_Identity.buf), C.int(cellResourceReport_C.nRCGI.pLMN_Identity.size))
-						cellResourceReport.NRCGI.PlmnID.Size = int(cellResourceReport_C.nRCGI.pLMN_Identity.size)
+				// 		cellResourceReport.NRCGI.PlmnID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.pLMN_Identity.buf), C.int(cellResourceReport_C.nRCGI.pLMN_Identity.size))
+				// 		cellResourceReport.NRCGI.PlmnID.Size = int(cellResourceReport_C.nRCGI.pLMN_Identity.size)
 
-						cellResourceReport.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.nRCellIdentity.buf), C.int(cellResourceReport_C.nRCGI.nRCellIdentity.size))
-						cellResourceReport.NRCGI.NRCellID.Size = int(cellResourceReport_C.nRCGI.nRCellIdentity.size)
-						cellResourceReport.NRCGI.NRCellID.BitsUnused = int(cellResourceReport_C.nRCGI.nRCellIdentity.bits_unused)
+				// 		cellResourceReport.NRCGI.NRCellID.Buf = C.GoBytes(unsafe.Pointer(cellResourceReport_C.nRCGI.nRCellIdentity.buf), C.int(cellResourceReport_C.nRCGI.nRCellIdentity.size))
+				// 		cellResourceReport.NRCGI.NRCellID.Size = int(cellResourceReport_C.nRCGI.nRCellIdentity.size)
+				// 		cellResourceReport.NRCGI.NRCellID.BitsUnused = int(cellResourceReport_C.nRCGI.nRCellIdentity.bits_unused)
 
-						cellResourceReport.UeResourceReportItemCount = int(cellResourceReport_C.ueResourceReportList.list.count)
-						for k := 0; k < cellResourceReport.UeResourceReportItemCount; k++ {
-							ueResourceReport := &cellResourceReport.UeResourceReportItems[k]
-							var sizeof_CU_UP_Usage_Report_UeResourceReportItem_t *C.CU_UP_Usage_Report_UeResourceReportItem_t
-							ueResourceReport_C := *(**C.CU_UP_Usage_Report_UeResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cellResourceReport_C.ueResourceReportList.list.array)) + (uintptr)(k)*unsafe.Sizeof(sizeof_CU_UP_Usage_Report_UeResourceReportItem_t)))
+				// 		cellResourceReport.UeResourceReportItemCount = int(cellResourceReport_C.ueResourceReportList.list.count)
+				// 		for k := 0; k < cellResourceReport.UeResourceReportItemCount; k++ {
+				// 			ueResourceReport := &cellResourceReport.UeResourceReportItems[k]
+				// 			var sizeof_CU_UP_Usage_Report_UeResourceReportItem_t *C.CU_UP_Usage_Report_UeResourceReportItem_t
+				// 			ueResourceReport_C := *(**C.CU_UP_Usage_Report_UeResourceReportItem_t)(unsafe.Pointer((uintptr)(unsafe.Pointer(cellResourceReport_C.ueResourceReportList.list.array)) + (uintptr)(k)*unsafe.Sizeof(sizeof_CU_UP_Usage_Report_UeResourceReportItem_t)))
 
-							ueResourceReport.CRNTI.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.c_RNTI.buf), C.int(ueResourceReport_C.c_RNTI.size))
-							ueResourceReport.CRNTI.Size = int(ueResourceReport_C.c_RNTI.size)
+				// 			ueResourceReport.CRNTI.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.c_RNTI.buf), C.int(ueResourceReport_C.c_RNTI.size))
+				// 			ueResourceReport.CRNTI.Size = int(ueResourceReport_C.c_RNTI.size)
 
-							if ueResourceReport_C.pDCPBytesDL != nil {
-								ueResourceReport.PDCPBytesDL = &Integer{}
-								ueResourceReport.PDCPBytesDL.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.pDCPBytesDL.buf), C.int(ueResourceReport_C.pDCPBytesDL.size))
-								ueResourceReport.PDCPBytesDL.Size = int(ueResourceReport_C.pDCPBytesDL.size)
-							}
+				// 			if ueResourceReport_C.pDCPBytesDL != nil {
+				// 				ueResourceReport.PDCPBytesDL = &Integer{}
+				// 				ueResourceReport.PDCPBytesDL.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.pDCPBytesDL.buf), C.int(ueResourceReport_C.pDCPBytesDL.size))
+				// 				ueResourceReport.PDCPBytesDL.Size = int(ueResourceReport_C.pDCPBytesDL.size)
+				// 			}
 
-							if ueResourceReport_C.pDCPBytesUL != nil {
-								ueResourceReport.PDCPBytesUL = &Integer{}
-								ueResourceReport.PDCPBytesUL.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.pDCPBytesUL.buf), C.int(ueResourceReport_C.pDCPBytesUL.size))
-								ueResourceReport.PDCPBytesUL.Size = int(ueResourceReport_C.pDCPBytesUL.size)
-							}
-						}
-					}
+				// 			if ueResourceReport_C.pDCPBytesUL != nil {
+				// 				ueResourceReport.PDCPBytesUL = &Integer{}
+				// 				ueResourceReport.PDCPBytesUL.Buf = C.GoBytes(unsafe.Pointer(ueResourceReport_C.pDCPBytesUL.buf), C.int(ueResourceReport_C.pDCPBytesUL.size))
+				// 				ueResourceReport.PDCPBytesUL.Size = int(ueResourceReport_C.pDCPBytesUL.size)
+				// 			}
+				// 		}
+				// 	}
 
-					ranContainer.Container = oCU_UP_UE
-				} else {
-					return indMsg, errors.New("Unknown RAN Container type")
-				}
+				// 	ranContainer.Container = oCU_UP_UE
+				// } else {
+				// 	return indMsg, errors.New("Unknown RAN Container type")
+				// }
 
 				pmContainer.RANContainer = ranContainer
 			}

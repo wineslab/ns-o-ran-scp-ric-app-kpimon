@@ -28,25 +28,37 @@ RUN cd xapp-frame && \
 WORKDIR /go/src/gerrit.o-ran-sc.org/r/scp/ric-app/kpimon
 COPY control/ control/
 COPY cmd/ cmd/
-COPY e2ap/ e2ap/
-COPY e2sm/ e2sm/
 
-# "COMPILING E2AP Wrapper"
-RUN cd e2ap && \
-    gcc -c -fPIC -Iheaders/ lib/*.c wrapper.c && \
-    gcc *.o -shared -o libe2apwrapper.so && \
-    cp libe2apwrapper.so /usr/local/lib/ && \
-    mkdir /usr/local/include/e2ap && \
-    cp wrapper.h headers/*.h /usr/local/include/e2ap && \
-    ldconfig
+# # "COMPILING E2AP Wrapper"
+# RUN cd e2ap && \
+#     gcc -c -fPIC -Iheaders/ lib/*.c wrapper.c && \
+#     gcc *.o -shared -o libe2apwrapper.so && \
+#     cp libe2apwrapper.so /usr/local/lib/ && \
+#     mkdir /usr/local/include/e2ap && \
+#     cp wrapper.h headers/*.h /usr/local/include/e2ap && \
+#     ldconfig
 
-# "COMPILING E2SM Wrapper"
-RUN cd e2sm && \
-    gcc -c -fPIC -Iheaders/ lib/*.c wrapper.c && \
-    gcc *.o -shared -o libe2smwrapper.so && \
-    cp libe2smwrapper.so /usr/local/lib/ && \
-    mkdir /usr/local/include/e2sm && \
-    cp wrapper.h headers/*.h /usr/local/include/e2sm && \
+# # "COMPILING E2SM Wrapper"
+# RUN cd e2sm && \
+#     gcc -c -fPIC -Iheaders/ lib/*.c wrapper.c && \
+#     gcc *.o -shared -o libe2smwrapper.so && \
+#     cp libe2smwrapper.so /usr/local/lib/ && \
+#     mkdir /usr/local/include/e2sm && \
+#     cp wrapper.h headers/*.h /usr/local/include/e2sm && \
+#     ldconfig
+
+RUN git clone -b ns-o-ran https://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@github.com/wineslab/libe2proto
+
+WORKDIR /go/src/gerrit.o-ran-sc.org/r/scp/ric-app/kpimon/libe2proto
+
+RUN cmake .
+RUN make
+RUN make install 
+
+RUN mkdir /usr/local/include/libe2proto && \ 
+    cp src/wrapper/wrapper.h  /usr/local/include/libe2proto && \
+    cp src/e2ap/*.h /usr/local/include/libe2proto && \ 
+    cp src/e2sm/*.h /usr/local/include/libe2proto && \
     ldconfig
 
 WORKDIR /go/src/gerrit.o-ran-sc.org/r/scp/ric-app/kpimon
@@ -66,8 +78,7 @@ ENV RMR_SEED_RT /opt/routes.txt
 COPY routes.txt /opt/routes.txt
 
 COPY --from=kpimonbuild /usr/local/lib /usr/local/lib
-COPY --from=kpimonbuild /usr/local/include/e2ap/*.h /usr/local/include/e2ap/
-COPY --from=kpimonbuild /usr/local/include/e2sm/*.h /usr/local/include/e2sm/
+COPY --from=kpimonbuild /usr/local/include/libe2proto/*.h /usr/local/include/libe2proto/
 RUN ldconfig
 WORKDIR /go/src/gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/config/
 COPY --from=kpimonbuild /go/src/gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/config/config-file.yaml .

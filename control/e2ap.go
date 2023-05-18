@@ -21,9 +21,9 @@ package control
 
 /*
 #include <stdlib.h>
-#include <e2ap/wrapper.h>
-#cgo LDFLAGS: -le2apwrapper
-#cgo CFLAGS: -I/usr/local/include/e2ap
+#include <libe2proto/wrapper.h>
+#cgo LDFLAGS: -le2proto -lm
+#cgo CFLAGS: -I/usr/local/include/libe2proto
 */
 import "C"
 
@@ -41,7 +41,7 @@ func (c *E2ap) GetSubscriptionRequestSequenceNumber(payload []byte) (subId uint1
 	cptr := unsafe.Pointer(&payload[0])
 	cret := C.e2ap_get_ric_subscription_request_sequence_number(cptr, C.size_t(len(payload)))
 	if cret < 0 {
-		return 0, errors.New("e2ap wrapper is unable to get Subscirption Request Sequence Number due to wrong or invalid payload")
+		return 0, errors.New("e2ap wrapper is unable to get Subscription Request Sequence Number due to wrong or invalid payload")
 	}
 	subId = uint16(cret)
 	return
